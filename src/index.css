@@ -1,68 +1,177 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+import React, { useEffect, useState, useRef } from "React";
+import Navbar from "./components/Navbar.jsx";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+function App() {
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  const homeRef = useRef(null);
+  const productsRef = useRef(null);
+  const aboutRef = useRef(null);
+  const contactRef = useRef(null);
+
+  const scrollTo = (ref) => {
+    ref.current.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    fetch("http://localhost:5000/products")
+      .then((res) => res.json())
+      .then((data) => {
+        setProducts(data);
+        setFilteredProducts(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching products:", err);
+        setLoading(false);
+      });
+  }, []);
+
+  // SEARCH FILTER
+  useEffect(() => {
+    const result = products.filter((p) =>
+      p.title.toLowerCase().includes(search.toLowerCase())
+    );
+
+    setFilteredProducts(result);
+  }, [search, products]);
+
+  return (
+    <div style={{ width: "100%", minHeight: "100vh" }}>
+      <Navbar
+        scrollTo={scrollTo}
+        homeRef={homeRef}
+        productsRef={productsRef}
+        aboutRef={aboutRef}
+        contactRef={contactRef}
+        search={search}
+        setSearch={setSearch}
+      />
+
+      {/* HERO */}
+      <section ref={homeRef} style={hero}>
+        <div style={{ maxWidth: "800px" }}>
+          <h1>IT Technology Store</h1>
+          <p>
+            We sell high-quality tech for gaming, work and performance. Clean.
+            Fast. Reliable.
+          </p>
+          <button onClick={() => scrollTo(productsRef)} style={heroBtn}>
+            View Products
+          </button>
+        </div>
+      </section>
+
+      {/* PRODUCTS */}
+      <section ref={productsRef} style={productsSection}>
+        <h1>Products</h1>
+
+        {loading ? (
+          <h2>Loading...</h2>
+        ) : filteredProducts.length === 0 ? (
+          <h2>No products found</h2>
+        ) : (
+          <div style={grid}>
+            {filteredProducts.map((p) => (
+              <div key={p.id} style={card}>
+                <img src={p.image} alt={p.title} style={img} />
+                <h3>{p.title}</h3>
+                <p>{p.description}</p>
+                <strong>{p.price} $</strong>
+                <button style={cartBtn}>Add to Cart</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ABOUT */}
+      <section ref={aboutRef} style={dark}>
+        <h1>About BTS</h1>
+        <p>
+          BTS is focused on modern IT tech, strong quality and real performance.
+        </p>
+      </section>
+
+      {/* CONTACT */}
+      <section ref={contactRef} style={light}>
+        <h1>Contact</h1>
+        <p>Email: info@btstech.com</p>
+        <p>Phone: +383 44 000 000</p>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={footer}>
+        © 2025 BTS Technology
+      </footer>
+    </div>
+  );
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
+/* STYLES */
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
+const hero = {
+  minHeight: "100vh",
+  width: "100%",
+  background: "#111",
+  color: "white",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  textAlign: "center",
+  padding: "40px",
+};
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+const heroBtn = {
+  padding: "12px 25px",
+  marginTop: "15px",
+  background: "white",
+  border: "none",
+  cursor: "pointer",
+  fontWeight: "bold",
+};
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+const productsSection = {
+  width: "100%",
+  padding: "60px 5%",
+  textAlign: "center",
+};
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
+const grid = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+  gap: "25px",
+  marginTop: "40px",
+  width: "100%",
+};
+
+const card = {
+  border: "1px solid #ddd",
+  padding: 20,
+  borderRadius: 12,
+  background: "white",
+  textAlign: "left",
+};
+
+const img = {
+  width: "100%",
+  height: 220,
+  objectFit: "cover",
+  borderRadius: 8,
+};
+
+const cartBtn = {
+  width: "100%",
+  padding: 12,
+  marginTop: 15,
+  background: "black",
+  color: "white",
+  border: "none",
+  cursor: "pointer",
+};
+
+const dark = {
+  padding: 80,
